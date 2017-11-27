@@ -1,0 +1,41 @@
+---
+- name: stop docker
+  service:
+    name: docker
+    state: stopped
+  ignore_errors: True
+- name: restart docker
+  service:
+    name: docker
+    state: restarted
+  ignore_errors: True
+- name: copy local /var/lib/docker
+  shell: cp -a /var/lib/docker /mnt/containers/var/lib/
+- name: copy local /etc/docker
+  shell: cp -a /etc/docker /mnt/containers/etc/
+
+- name: stop lxd
+  service:
+    name: snap.lxd.daemon
+    state: stopped
+  ignore_errors: True
+- name: restart lxd
+  service:
+    name: snap.lxd.daemon
+    state: restarted
+  ignore_errors: True
+
+- name: stop snapd
+  service:
+    name: snapd
+    state: stopped
+  ignore_errors: True
+- name: restart snapd
+  service:
+    name: snapd
+    state: restarted
+  ignore_errors: True
+- name: copy local /var/snap
+  shell: cp -a /var/snap /mnt/containers/var/
+- name: copy local /var/lib/snapd
+  shell: cp -a /var/lib/snapd /mnt/containers/var/lib/

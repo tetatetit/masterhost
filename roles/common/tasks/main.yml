@@ -1,0 +1,74 @@
+---
+- apt:
+    upgrade: full    
+
+- shell: |
+    if [ ! -f /swapfile ]; then
+      fallocate -l 4g /swapfile
+      chmod 600 /swapfile
+      mkswap -L swap /swapfile
+      swapon /swapfile
+    fi
+- mount:
+    src: /swapfile
+    path: none
+    fstype: swap
+    state: present
+
+- lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: ^PermitRootLogin 
+    line: PermitRootLogin yes
+- lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: ^PasswordAuthentication 
+    line: PasswordAuthentication yes
+- service:
+    name: sshd
+    state: restarted
+
+- lvg:
+    vg: lc
+    pvs: /dev/sdb
+- lvol:
+    vg: lc
+    lv: persist
+    size: 100m
+- filesystem:
+    dev: /dev/lc/persist
+    fstype: xfs
+    opts: -L persist
+- mount:
+    src: /dev/lc/persist
+    path: /mnt/persist
+    fstype: xfs
+    opts: discard
+    state: mounted
+- file:
+    path: /mnt/persist/var
+    state: directory
+- file:
+    path: /mnt/persist/etc
+    state: directory
+- shell: test -d /mnt/persist/var/log || cp -a /var/log /mnt/persist/var/log
+- mount:
+    src: /mnt/persist/var/log
+    path: /var/log
+    fstype: none
+    opts: bind
+    state: mounted
+- shell: test -d /mnt/persist/root || cp -a /root /mnt/persist/root
+- mount:
+    src: /mnt/persist/root
+    path: /root
+    fstype: none
+    opts: bind
+    state: mounted
+- shell: test -d /mnt/persist/home || cp -a /home /mnt/persist/home
+- mount:
+    src: /mnt/persist/home
+    path: /home
+    fstype: none
+    opts: bind
+    state: mounted
+

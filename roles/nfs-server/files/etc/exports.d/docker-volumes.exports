@@ -1,0 +1,2 @@
+/mnt/nfs sky(rw,sync,no_root_squash,no_subtree_check,fsid=0)
+/mnt/nfs/docker-volumes/rancher-nfs sky(rw,sync,no_root_squash,no_subtree_check)

@@ -1,0 +1,4 @@
+---
+- apt:
+    name: nfs-kernel-server
+    state: present

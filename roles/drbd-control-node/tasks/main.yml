@@ -1,0 +1,19 @@
+---
+- apt_repository:
+    repo: 'ppa:linbit/linbit-drbd9-stack'
+    state: present
+- shell: test -d /mnt/persist/etc/drbd.d || cp -a /etc/drbd.d /mnt/persist/etc/ || mkdir /mnt/persist/etc/drbd.d
+- mount:
+    src: /mnt/persist/etc/drbd.d
+    path: /etc/drbd.d
+    fstype: none
+    opts: bind
+    state: mounted
+- apt:
+    name: drbd-dkms,drbd-utils,python-drbdmanage
+    state: present
+- lineinfile:
+    path: /etc/drbdmanaged.cfg
+    state: present
+    line: 'drbdctrl-vg = lc'
+- shell: test -f /etc/drbd.d/drbdctl.res || drbdmanage init -q

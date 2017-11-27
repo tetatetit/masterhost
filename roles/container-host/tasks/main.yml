@@ -1,0 +1,99 @@
+---
+- apt:
+    name: lxd,lxd-client,lxcfs,lxc-common,docker,docker-engine,docker.io
+    state: absent
+    autoremove: yes
+- shell: |
+    drbdmanage list-volumes -m | grep '\bcontainers\b' || drbdmanage add-volume containers 4G
+    drbdmanage list-assignments -m | grep '\bcontainers\b' || drbdmanage assign-resource containers `hostname`
+- filesystem:
+    dev: /dev/drbd/by-res/containers/0
+    fstype: xfs
+    opts: -L containers
+- mount:
+    src: /dev/drbd/by-res/containers/0
+    path: /mnt/containers
+    fstype: xfs
+    opts: discard
+    state: mounted
+  notify:
+  - stop docker
+  - stop snapd
+  - stop lxd
+- file:
+    path: /mnt/containers/var/lib/docker
+    state: directory
+    recurse: yes
+  notify:
+  - stop docker
+  - copy local /var/lib/docker
+- file:
+    path: /mnt/containers/etc/docker
+    state: directory
+    recurse: yes
+  notify:
+  - stop docker
+  - copy local /etc/docker
+- file:
+    path: /mnt/containers/var/snap
+    state: directory
+    recurse: yes
+  notify:
+  - stop lxd
+  - stop snapd
+  - copy local /var/snap
+- file:
+    path: /mnt/containers/var/lib/snapd
+    state: directory
+    recurse: yes
+  notify:
+  - stop lxd
+  - stop snapd
+  - copy local /var/lib/snapd
+- mount:
+    src: /mnt/containers/var/lib/docker
+    path: /var/lib/docker
+    fstype: none
+    opts: bind
+    state: mounted
+  notify:
+  - restart docker
+- mount:
+    src: /mnt/containers/etc/docker
+    path: /etc/docker
+    fstype: none
+    opts: bind
+    state: mounted
+  notify:
+  - restart docker
+- mount:
+    src: /mnt/containers/var/snap
+    path: /var/snap
+    fstype: none
+    opts: bind
+    state: mounted
+  notify:
+  - restart snapd
+  - restart lxd
+- mount:
+    src: /mnt/containers/var/lib/snapd
+    path: /var/lib/snapd
+    fstype: none
+    opts: bind
+    state: mounted
+  notify:
+  - restart snapd
+  - restart lxd
+- shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    apt-key fingerprint 0EBFCD88
+- apt_repository:
+    repo: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable'
+    state: present
+- apt:
+    name: snapd,docker-ce=17.06.2~ce-0~ubuntu,drbdmanage-docker-volume
+    state: present
+- shell: apt-mark hold docker-ce
+- systemd:
+    name: docker-drbdmanage-plugin.socket
+    enabled: yes
