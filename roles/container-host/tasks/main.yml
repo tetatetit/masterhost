@@ -51,6 +51,7 @@
     - stop lxd
     - stop snapd
     - copy local /var/lib/snapd
+  - meta: flush_handlers
 - block:
   - mount:
       src: /mnt/containers/var/lib/docker
@@ -86,6 +87,10 @@
     notify:
     - restart snapd
     - restart lxd
+  - copy:
+      src: rootfs/
+      dest: /
+  - meta: flush_handlers
 - shell: |
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
     apt-key fingerprint 0EBFCD88
@@ -99,7 +104,3 @@
 - systemd:
     name: docker-drbdmanage-plugin.socket
     enabled: yes
-- copy:
-    src: rootfs/
-    dest: /
-    
