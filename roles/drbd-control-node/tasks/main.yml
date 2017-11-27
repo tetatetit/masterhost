@@ -16,4 +16,4 @@
     path: /etc/drbdmanaged.cfg
     state: present
     line: 'drbdctrl-vg = lc'
-- shell: test -f /etc/drbd.d/drbdctl.res || drbdmanage init -q
+- shell: test -f /etc/drbd.d/drbdctrl.res || drbdmanage init -q

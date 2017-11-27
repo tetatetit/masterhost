@@ -10,80 +10,82 @@
     dev: /dev/drbd/by-res/containers/0
     fstype: xfs
     opts: -L containers
-- mount:
-    src: /dev/drbd/by-res/containers/0
-    path: /mnt/containers
-    fstype: xfs
-    opts: discard
-    state: mounted
-  notify:
-  - stop docker
-  - stop snapd
-  - stop lxd
-- file:
-    path: /mnt/containers/var/lib/docker
-    state: directory
-    recurse: yes
-  notify:
-  - stop docker
-  - copy local /var/lib/docker
-- file:
-    path: /mnt/containers/etc/docker
-    state: directory
-    recurse: yes
-  notify:
-  - stop docker
-  - copy local /etc/docker
-- file:
-    path: /mnt/containers/var/snap
-    state: directory
-    recurse: yes
-  notify:
-  - stop lxd
-  - stop snapd
-  - copy local /var/snap
-- file:
-    path: /mnt/containers/var/lib/snapd
-    state: directory
-    recurse: yes
-  notify:
-  - stop lxd
-  - stop snapd
-  - copy local /var/lib/snapd
-- mount:
-    src: /mnt/containers/var/lib/docker
-    path: /var/lib/docker
-    fstype: none
-    opts: bind
-    state: mounted
-  notify:
-  - restart docker
-- mount:
-    src: /mnt/containers/etc/docker
-    path: /etc/docker
-    fstype: none
-    opts: bind
-    state: mounted
-  notify:
-  - restart docker
-- mount:
-    src: /mnt/containers/var/snap
-    path: /var/snap
-    fstype: none
-    opts: bind
-    state: mounted
-  notify:
-  - restart snapd
-  - restart lxd
-- mount:
-    src: /mnt/containers/var/lib/snapd
-    path: /var/lib/snapd
-    fstype: none
-    opts: bind
-    state: mounted
-  notify:
-  - restart snapd
-  - restart lxd
+- block:
+  - mount:
+      src: /dev/drbd/by-res/containers/0
+      path: /mnt/containers
+      fstype: xfs
+      opts: discard,noatime,nofail,x-systemd.device-timeout=20,x-systemd.requires=drbd.service
+      state: mounted
+    notify:
+    - stop docker
+    - stop snapd
+    - stop lxd
+  - file:
+      path: /mnt/containers/var/lib/docker
+      state: directory
+      recurse: yes
+    notify:
+    - stop docker
+    - copy local /var/lib/docker
+  - file:
+      path: /mnt/containers/etc/docker
+      state: directory
+      recurse: yes
+    notify:
+    - stop docker
+    - copy local /etc/docker
+  - file:
+      path: /mnt/containers/var/snap
+      state: directory
+      recurse: yes
+    notify:
+    - stop lxd
+    - stop snapd
+    - copy local /var/snap
+  - file:
+      path: /mnt/containers/var/lib/snapd
+      state: directory
+      recurse: yes
+    notify:
+    - stop lxd
+    - stop snapd
+    - copy local /var/lib/snapd
+- block:
+  - mount:
+      src: /mnt/containers/var/lib/docker
+      path: /var/lib/docker
+      fstype: none
+      opts: bind,nofail,x-systemd.device-timeout=20,x-systemd.requires-mounts-for=/mnt/containers
+      state: mounted
+    notify:
+    - restart docker
+  - mount:
+      src: /mnt/containers/etc/docker
+      path: /etc/docker
+      fstype: none
+      opts: bind,nofail,x-systemd.device-timeout=20,x-systemd.requires-mounts-for=/mnt/containers
+      state: mounted
+    notify:
+    - restart docker
+  - mount:
+      src: /mnt/containers/var/snap
+      path: /var/snap
+      fstype: none
+      opts: bind,nofail,x-systemd.device-timeout=20,x-systemd.requires-mounts-for=/mnt/containers
+      state: mounted
+    notify:
+    - restart snapd
+    - restart lxd
+  - mount:
+      src: /mnt/containers/var/lib/snapd
+      path: /var/lib/snapd
+      fstype: none
+      opts: bind,nofail,x-systemd.device-timeout=20,x-systemd.requires-mounts-for=/mnt/containers
+      state: mounted
+    notify:
+    - restart snapd
+    - restart lxd
 - shell: |
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
     apt-key fingerprint 0EBFCD88
@@ -97,3 +99,7 @@
 - systemd:
     name: docker-drbdmanage-plugin.socket
     enabled: yes
+- copy:
+    src: rootfs/
+    dest: /
+    
