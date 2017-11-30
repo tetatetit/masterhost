@@ -3,39 +3,36 @@
   service:
     name: docker
     state: stopped
-  ignore_errors: True
+  ignore_errors: true
 - name: restart docker
   service:
     name: docker
     state: restarted
-  ignore_errors: True
+  ignore_errors: true
 - name: copy local /var/lib/docker
   shell: cp -a /var/lib/docker /mnt/containers/var/lib/
 - name: copy local /etc/docker
   shell: cp -a /etc/docker /mnt/containers/etc/
+  ignore_errors: true
 
 - name: stop lxd
   service:
-    name: snap.lxd.daemon
+    name: lxd
     state: stopped
-  ignore_errors: True
+  ignore_errors: true
 - name: restart lxd
   service:
-    name: snap.lxd.daemon
+    name: lxd
     state: restarted
-  ignore_errors: True
+  ignore_errors: true
+- name: copy local /var/lib/lxd
+  shell: cp -a /var/lib/lxd /mnt/containers/var/lib/
+  ignore_errors: true
 
-- name: stop snapd
-  service:
-    name: snapd
-    state: stopped
-  ignore_errors: True
-- name: restart snapd
-  service:
-    name: snapd
-    state: restarted
-  ignore_errors: True
-- name: copy local /var/snap
-  shell: cp -a /var/snap /mnt/containers/var/
-- name: copy local /var/lib/snapd
-  shell: cp -a /var/lib/snapd /mnt/containers/var/lib/
+- name: configure lxd
+  shell: |
+    sleep 5
+    lxd init --auto --storage-backend dir
+    sleep 5
+    lxc network create lxdbr0
+    lxc network attach-profile lxdbr0 default eth0
