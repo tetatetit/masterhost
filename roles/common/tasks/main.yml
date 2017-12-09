@@ -1,19 +1,22 @@
 ---
 - apt:
-    upgrade: full    
+    upgrade: full
+- apt:
+    name: apt-transport-https
+    state: present 
 
-- shell: |
-    if [ ! -f /swapfile ]; then
-      fallocate -l 4g /swapfile
-      chmod 600 /swapfile
-      mkswap -L swap /swapfile
-      swapon /swapfile
-    fi
-- mount:
-    src: /swapfile
-    path: none
-    fstype: swap
-    state: present
+#- shell: |
+#    if [ ! -f /swapfile ]; then
+#      fallocate -l 4g /swapfile
+#      chmod 600 /swapfile
+#      mkswap -L swap /swapfile
+#      swapon /swapfile
+#    fi
+#- mount:
+#    src: /swapfile
+#    path: none
+#    fstype: swap
+#    state: present
 
 - lineinfile:
     path: /etc/ssh/sshd_config
@@ -27,13 +30,13 @@
     name: sshd
     state: restarted
 
-- lvg:
-    vg: lc
-    pvs: /dev/sdb
+#- lvg:
+#    vg: lc
+#    pvs: /dev/sdb
 - lvol:
     vg: lc
     lv: persist
-    size: 100m
+    size: 1g
 - filesystem:
     dev: /dev/lc/persist
     fstype: xfs
@@ -56,19 +59,19 @@
     path: /var/log
     fstype: none
     opts: bind
-    state: mounted
+    state: present
 - shell: test -d /mnt/persist/root || cp -a /root /mnt/persist/root
 - mount:
     src: /mnt/persist/root
     path: /root
     fstype: none
     opts: bind
-    state: mounted
+    state: present
 - shell: test -d /mnt/persist/home || cp -a /home /mnt/persist/home
 - mount:
     src: /mnt/persist/home
     path: /home
     fstype: none
     opts: bind
-    state: mounted
+    state: present
 

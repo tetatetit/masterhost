@@ -12,8 +12,12 @@
 - apt:
     name: drbd-dkms,drbd-utils,python-drbdmanage
     state: present
-- lineinfile:
+- blockinfile:
     path: /etc/drbdmanaged.cfg
-    state: present
-    line: 'drbdctrl-vg = lc'
-- shell: test -f /etc/drbd.d/drbdctrl.res || drbdmanage init -q
+    block: |
+      drbdctrl-vg = lc
+      storage-plugin = drbdmanage.storage.lvm_thinlv.LvmThinLv
+      [Plugin:ThinLV]
+      volume-group = lc
+      pool-name = PoolDefault
+- shell: test -f /etc/drbd.d/drbdctrl.res || drbdmanage init -q && sleep 5
